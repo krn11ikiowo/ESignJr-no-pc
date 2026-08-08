@@ -1,0 +1,67 @@
+name: Build ESignJr-no-pc (Separate Commits)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create storage folder
+      run: |
+        mkdir -p storage
+        git add storage
+        git commit -m "Create storage folder"
+
+    - name: Write index.htm
+      run: |
+        cat > index.htm << 'EOF'
+        <!-- INDEX.HTM CONTENT WILL BE INSERTED HERE -->
+        EOF
+        git add index.htm
+        git commit -m "Add index.htm"
+
+    - name: Write style.css
+      run: |
+        cat > style.css << 'EOF'
+        /* STYLE.CSS CONTENT WILL BE INSERTED HERE */
+        EOF
+        git add style.css
+        git commit -m "Add style.css"
+
+    - name: Write app.js
+      run: |
+        cat > app.js << 'EOF'
+        // APP.JS CONTENT WILL BE INSERTED HERE
+        EOF
+        git add app.js
+        git commit -m "Add app.js"
+
+    - name: Write server.js
+      run: |
+        cat > server.js << 'EOF'
+        // SERVER.JS CONTENT WILL BE INSERTED HERE
+        EOF
+        git add server.js
+        git commit -m "Add server.js"
+
+    - name: Write sign_backend.py
+      run: |
+        cat > sign_backend.py << 'EOF'
+        # SIGN_BACKEND.PY CONTENT WILL BE INSERTED HERE
+        EOF
+        git add sign_backend.py
+        git commit -m "Add sign_backend.py"
+
+    - name: Push all commits
+      run: |
+        git push
