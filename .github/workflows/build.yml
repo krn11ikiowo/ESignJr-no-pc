@@ -23,50 +23,95 @@ jobs:
 
     - name: Create storage folder
       run: |
-        mkdir -p storage
-        git add storage
-        git commit -m "Create storage folder"
+        mkdir -p backend/storage
+        git add backend/storage
+        git commit -m "Create storage folder" || echo "No changes"
 
     - name: Write index.htm
       run: |
         cat > index.htm << 'EOF'
-        <!-- INDEX.HTM CONTENT -->
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <title>ESignJr-no-pc – Web Installer</title>
+        <link rel="stylesheet" href="style.css">
+        </head>
+        <body>
+        <h1>ESignJr-no-pc</h1>
+        <p>Community recreation inspired by AppleJR.net.</p>
+        <div class="tabs">
+          <button class="tab-button active" onclick="showTab('installer')">Installer</button>
+          <button class="tab-button" onclick="showTab('library')">Library</button>
+          <button class="tab-button" onclick="showTab('metadata')">Metadata</button>
+          <button class="tab-button" onclick="showTab('provision')">Provisioning</button>
+        </div>
+        <div id="installer" class="tab active">
+          <div class="card"><h2>Select IPA</h2><input type="file" id="ipa" accept=".ipa"></div>
+          <div class="card"><h2>Apple ID Certificate</h2><input type="email" id="appleId" placeholder="Apple ID"><input type="password" id="password" placeholder="Apple ID Password"></div>
+          <div class="card"><h2>Device UDID</h2><input type="text" id="deviceUdid" placeholder="Device UDID"></div>
+          <div class="card"><button onclick="signIPA()">Sign & Install</button><p id="status"></p></div>
+        </div>
+        <div id="library" class="tab"><div class="card"><h2>Signed IPA Library</h2><button onclick="loadLibrary()">Refresh</button><ul id="libraryList"></ul></div></div>
+        <div id="metadata" class="tab"><div class="card"><h2>IPA Metadata</h2><pre id="metadataOutput"></pre></div></div>
+        <div id="provision" class="tab"><div class="card"><h2>Provisioning Profile Metadata</h2><pre id="provisionOutput"></pre></div></div>
+        <script src="app.js"></script>
+        </body>
+        </html>
         EOF
         git add index.htm
-        git commit -m "Add index.htm"
+        git commit -m "Update index.htm" || echo "No changes"
 
     - name: Write style.css
       run: |
         cat > style.css << 'EOF'
-        /* STYLE.CSS CONTENT */
+        body {font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f2f7;margin:0;padding:20px;}
+        h1{margin-bottom:10px;}
+        .card{background:#fff;padding:20px;border-radius:16px;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
+        button{background:#007aff;color:#fff;border:none;padding:12px 18px;border-radius:10px;font-size:16px;cursor:pointer;}
+        input{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:1px solid #ccc;font-size:16px;}
+        .tabs{display:flex;gap:10px;margin-bottom:20px;}
+        .tab-button{flex:1;padding:10px;border-radius:10px;border:none;background:#e5e5ea;font-size:14px;cursor:pointer;}
+        .tab-button.active{background:#007aff;color:#fff;}
+        .tab{display:none;}
+        .tab.active{display:block;}
         EOF
         git add style.css
-        git commit -m "Add style.css"
+        git commit -m "Update style.css" || echo "No changes"
 
     - name: Write app.js
       run: |
         cat > app.js << 'EOF'
-        // APP.JS CONTENT
+        function showTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));document.getElementById(id).classList.add("active");}
+        async function signIPA(){const ipaFile=document.getElementById("ipa").files[0];const appleId=document.getElementById("appleId").value;const password=document.getElementById("password").value;const deviceUdid=document.getElementById("deviceUdid").value;const status=document.getElementById("status");if(!ipaFile||!appleId||!password||!deviceUdid){status.textContent="Missing fields.";return;}const form=new FormData();form.append("ipa",ipaFile);form.append("appleId",appleId);form.append("password",password);form.append("deviceUdid",deviceUdid);status.textContent="Signing…";const res=await fetch("/sign",{method:"POST",body:form});const data=await res.json();status.textContent="Signed IPA ready.";document.getElementById("metadataOutput").textContent=JSON.stringify(data.metadata,null,2);document.getElementById("provisionOutput").textContent=JSON.stringify(data.provisioning,null,2);const dl=document.createElement("a");dl.href="/download?path="+encodeURIComponent(data.signedPath);dl.download="signed_"+ipaFile.name;dl.click();}
+        async function loadLibrary(){const res=await fetch("/library");const data=await res.json();const list=document.getElementById("libraryList");list.innerHTML="";data.files.forEach(f=>{const li=document.createElement("li");li.innerHTML=\`<a href="/download?path=\${encodeURIComponent(f.path)}">\${f.name}</a>\`;list.appendChild(li);});}
         EOF
         git add app.js
-        git commit -m "Add app.js"
+        git commit -m "Update app.js" || echo "No changes"
 
-    - name: Write server.js
+    - name: Write backend/server.js
       run: |
-        cat > server.js << 'EOF'
-        // SERVER.JS CONTENT
+        mkdir -p backend
+        cat > backend/server.js << 'EOF'
+        const express=require("express");const multer=require("multer");const{spawn}=require("child_process");const path=require("path");const fs=require("fs");
+        const app=express();const upload=multer({dest:path.join(__dirname,"storage")});
+        app.post("/sign",upload.single("ipa"),(req,res)=>{const ipaPath=req.file.path;const py=spawn("python3",[path.join(__dirname,"sign_backend.py")]);py.stdin.write(JSON.stringify({ipa_path:ipaPath,apple_id:req.body.appleId,password:req.body.password,device_udid:req.body.deviceUdid}));py.stdin.end();let output="";py.stdout.on("data",d=>output+=d.toString());py.on("close",()=>{const result=JSON.parse(output);res.json(result);});});
+        app.get("/library",(req,res)=>{const dir=path.join(__dirname,"storage");const files=fs.readdirSync(dir).filter(f=>f.startsWith("signed_")).map(f=>({name:f,path:path.join(dir,f)}));res.json({files});});
+        app.get("/download",(req,res)=>{res.download(req.query.path);});
+        app.listen(3000);
         EOF
-        git add server.js
-        git commit -m "Add server.js"
+        git add backend/server.js
+        git commit -m "Update backend/server.js" || echo "No changes"
 
-    - name: Write sign_backend.py
+    - name: Write backend/sign_backend.py
       run: |
-        cat > sign_backend.py << 'EOF'
-        # SIGN_BACKEND.PY CONTENT
-        EOF
-        git add sign_backend.py
-        git commit -m "Add sign_backend.py"
-
-    - name: Push all commits
-      run: |
-        git push
+        cat > backend/sign_backend.py << 'EOF'
+        import sys,json,shutil,zipfile,plistlib
+        from pathlib import Path
+        def extract_metadata(ipa_path):
+            ipa=Path(ipa_path);temp=ipa.with_suffix("")
+            with zipfile.ZipFile(ipa,"r") as z:z.extractall(temp)
+            app_dir=next((d for d in (temp/"Payload").iterdir() if d.suffix==".app"),None)
+            plist_path=app_dir/"Info.plist"
+            with plist_path.open("rb") as f:plist=plistlib.load(f)
+            metadata={"bundle_id":plist.get("CF
