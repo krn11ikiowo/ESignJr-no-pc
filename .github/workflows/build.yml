@@ -16,6 +16,11 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Configure Git identity
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+
     - name: Create storage folder
       run: |
         mkdir -p storage
@@ -25,7 +30,7 @@ jobs:
     - name: Write index.htm
       run: |
         cat > index.htm << 'EOF'
-        <!-- INDEX.HTM CONTENT WILL BE INSERTED HERE -->
+        <!-- INDEX.HTM CONTENT -->
         EOF
         git add index.htm
         git commit -m "Add index.htm"
@@ -33,7 +38,7 @@ jobs:
     - name: Write style.css
       run: |
         cat > style.css << 'EOF'
-        /* STYLE.CSS CONTENT WILL BE INSERTED HERE */
+        /* STYLE.CSS CONTENT */
         EOF
         git add style.css
         git commit -m "Add style.css"
@@ -41,7 +46,7 @@ jobs:
     - name: Write app.js
       run: |
         cat > app.js << 'EOF'
-        // APP.JS CONTENT WILL BE INSERTED HERE
+        // APP.JS CONTENT
         EOF
         git add app.js
         git commit -m "Add app.js"
@@ -49,7 +54,7 @@ jobs:
     - name: Write server.js
       run: |
         cat > server.js << 'EOF'
-        // SERVER.JS CONTENT WILL BE INSERTED HERE
+        // SERVER.JS CONTENT
         EOF
         git add server.js
         git commit -m "Add server.js"
@@ -57,7 +62,7 @@ jobs:
     - name: Write sign_backend.py
       run: |
         cat > sign_backend.py << 'EOF'
-        # SIGN_BACKEND.PY CONTENT WILL BE INSERTED HERE
+        # SIGN_BACKEND.PY CONTENT
         EOF
         git add sign_backend.py
         git commit -m "Add sign_backend.py"
