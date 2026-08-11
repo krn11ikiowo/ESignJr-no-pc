@@ -30,6 +30,7 @@ def main():
     p12 = out / "dev_cert.p12"
     mp_out = out / "dev.mobileprovision"
 
+    # Build p12
     run([
         "openssl", "pkcs12",
         "-export",
@@ -39,13 +40,16 @@ def main():
         "-password", f"pass:{args.p12_password}"
     ])
 
+    # Copy mobileprovision
     mp_out.write_bytes(mp.read_bytes())
 
-    print("\n=== BASE64 SECRETS ===")
+    # Print secrets for GitHub
+    print("\n=== COPY THESE INTO GITHUB SECRETS ===")
     print("APPLE_DEV_CERT_PEM_B64=", b64(cert))
     print("APPLE_DEV_KEY_PEM_B64=", b64(key))
     print("APPLE_DEV_MOBILEPROVISION_B64=", b64(mp))
-    print("=======================\n")
+    print("P12_PASSWORD=", args.p12_password)
+    print("======================================\n")
 
     print("Generated:")
     print("  ", p12)
