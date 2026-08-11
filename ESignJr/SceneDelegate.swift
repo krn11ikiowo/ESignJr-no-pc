@@ -11,7 +11,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = UIViewController()
+        
+        // Create root view controller
+        let rootViewController = createRootViewController()
+        let navigationController = UINavigationController(rootViewController: rootViewController)
+        
+        window.rootViewController = navigationController
         window.makeKeyAndVisible()
         self.window = window
     }
@@ -25,4 +30,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillEnterForeground(_ scene: UIScene) {}
 
     func sceneDidEnterBackground(_ scene: UIScene) {}
+
+    // MARK: - Private Methods
+    private func createRootViewController() -> UIViewController {
+        let viewController = MainViewController()
+        return viewController
+    }
 }
