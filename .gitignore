@@ -1,0 +1,42 @@
+# Xcode
+.DS_Store
+**/xcuserdata/
+**/xcshareddata/
+*.xcworkspace/xcuserdata/
+*.xcworkspace/xcshareddata/
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift
+.build/
+*.swift.bak
+*.playground
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Carthage
+Carthage/Build/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.env
+.env.local
