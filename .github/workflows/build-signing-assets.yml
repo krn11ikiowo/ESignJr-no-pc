@@ -1,0 +1,44 @@
+name: Build iOS signing assets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-signing-assets:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Decode cert, key, and mobileprovision from secrets
+        run: |
+          mkdir -p signing_input
+
+          echo "$APPLE_DEV_CERT_PEM_B64" | base64 --decode > signing_input/cert.pem
+          echo "$APPLE_DEV_KEY_PEM_B64"  | base64 --decode > signing_input/key.pem
+          echo "$APPLE_DEV_MOBILEPROVISION_B64" | base64 --decode > signing_input/dev.mobileprovision
+        env:
+          APPLE_DEV_CERT_PEM_B64: ${{ secrets.APPLE_DEV_CERT_PEM_B64 }}
+          APPLE_DEV_KEY_PEM_B64: ${{ secrets.APPLE_DEV_KEY_PEM_B64 }}
+          APPLE_DEV_MOBILEPROVISION_B64: ${{ secrets.APPLE_DEV_MOBILEPROVISION_B64 }}
+
+      - name: Generate p12 and mobileprovision
+        run: |
+          python build_signing_assets.py \
+            --cert-pem signing_input/cert.pem \
+            --key-pem signing_input/key.pem \
+            --p12-password "${{ secrets.P12_PASSWORD }}" \
+            --mobileprovision signing_input/dev.mobileprovision \
+            --out-dir signing_output
+
+      - name: Upload signing assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-signing-assets
+          path: signing_output
