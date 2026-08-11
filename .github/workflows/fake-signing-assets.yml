@@ -1,0 +1,65 @@
+name: Generate Fake iOS Signing Assets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate fake cert + key
+        run: |
+          mkdir signing_input
+
+          # Generate private key
+          openssl genrsa -out signing_input/key.pem 2048
+
+          # Generate fake development certificate
+          openssl req -new -x509 \
+            -key signing_input/key.pem \
+            -out signing_input/cert.pem \
+            -days 365 \
+            -subj "/CN=Fake Apple Development Certificate"
+
+      - name: Generate fake mobileprovision
+        run: |
+          cat > signing_input/dev.mobileprovision << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+           "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>Name</key>
+            <string>Fake Development Profile</string>
+            <key>Entitlements</key>
+            <dict>
+              <key>get-task-allow</key>
+              <true/>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate p12 + secrets
+        run: |
+          python build_signing_assets.py \
+            --cert signing_input/cert.pem \
+            --key signing_input/key.pem \
+            --mobileprovision signing_input/dev.mobileprovision \
+            --p12-password "fakepassword" \
+            --out signing_output
+
+      - name: Upload signing assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: fake-ios-signing-assets
+          path: signing_output
