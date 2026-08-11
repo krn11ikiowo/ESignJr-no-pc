@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Name</key>
+    <string>Fake Development Profile</string>
+
+    <key>UUID</key>
+    <string>00000000-0000-0000-0000-000000000000</string>
+
+    <key>TeamIdentifier</key>
+    <array>
+        <string>FAKEAPPLEID</string>
+    </array>
+
+    <key>AppIDName</key>
+    <string>FakeApp</string>
+
+    <key>ApplicationIdentifierPrefix</key>
+    <array>
+        <string>FAKEAPPLEID</string>
+    </array>
+
+    <key>Entitlements</key>
+    <dict>
+        <key>application-identifier</key>
+        <string>FAKEAPPLEID.com.example.fakeapp</string>
+
+        <key>keychain-access-groups</key>
+        <array>
+            <string>FAKEAPPLEID.com.example.fakeapp</string>
+        </array>
+
+        <key>get-task-allow</key>
+        <true/>
+    </dict>
+
+    <key>ProvisionedDevices</key>
+    <array>
+        <string>0000000000000000000000000000000000000000</string>
+    </array>
+
+    <key>Platform</key>
+    <array>
+        <string>iOS</string>
+    </array>
+
+    <key>ExpirationDate</key>
+    <date>2099-12-31T00:00:00Z</date>
+
+    <key>CreationDate</key>
+    <date>2024-01-01T00:00:00Z</date>
+
+    <key>Version</key>
+    <integer>1</integer>
+</dict>
+</plist>
