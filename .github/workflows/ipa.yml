@@ -54,7 +54,7 @@ jobs:
         unzip -l ESignJr.ipa | head -20
     
     - name: Upload IPA as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ESignJr-ipa
         path: ESignJr.ipa
