@@ -1,0 +1,69 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [ main, ipa-steucguromg-xcode-template ]
+  pull_request:
+    branches: [ main, ipa-steucguromg-xcode-template ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Select Xcode version
+      run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+    
+    - name: Get Xcode version
+      run: xcodebuild -version
+    
+    - name: Create Keychain
+      run: |
+        security create-keychain -p "" build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "" build.keychain
+    
+    - name: Build for generic iOS Device
+      run: |
+        xcodebuild clean build \
+          -project ESignJr/ESignJr.xcodeproj \
+          -scheme ESignJr \
+          -configuration Release \
+          -destination generic/platform=iOS \
+          -derivedDataPath DerivedData \
+          -verbose
+    
+    - name: Create Payload directory structure
+      run: |
+        mkdir -p Payload
+        cp -r DerivedData/Build/Products/Release-iphoneos/ESignJr.app Payload/ESignJr.app
+    
+    - name: Create IPA
+      run: |
+        cd Payload
+        zip -r ../ESignJr.ipa ESignJr.app
+        cd ..
+    
+    - name: Verify IPA
+      run: |
+        ls -lh ESignJr.ipa
+        unzip -l ESignJr.ipa | head -20
+    
+    - name: Upload IPA as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ESignJr-ipa
+        path: ESignJr.ipa
+        retention-days: 30
+    
+    - name: Create Release (on version tag)
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ESignJr.ipa
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
